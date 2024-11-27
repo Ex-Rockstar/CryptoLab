@@ -1,41 +1,35 @@
-public class VigenereCipher {
-    // Method to encode the text using the Vigenère Cipher
-    static String encode(String text, final String key) {
-        String res = "";
+public class Main {
+    // Encode the text using the Vigenère Cipher
+    static String encode(String text, String key) {
+        return process(text, key, true);
+    }
+
+    // Decode the text using the Vigenère Cipher
+    static String decode(String text, String key) {
+        return process(text, key, false);
+    }
+
+    // Common method for encoding and decoding
+    static String process(String text, String key, boolean isEncoding) {
+        StringBuilder result = new StringBuilder();
         text = text.toUpperCase();
-        String keyUpper = key.toUpperCase();
+        key = key.toUpperCase();
+        int keyLength = key.length();
 
         for (int i = 0, j = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c < 'A' || c > 'Z') {
-                res += c; // Preserve non-alphabet characters
+            if (c < 'A' || c > 'Z') { // Preserve non-alphabet characters
+                result.append(c);
                 continue;
             }
-            res += (char) ((c + keyUpper.charAt(j) - 2 * 'A') % 26 + 'A');
-            j = ++j % keyUpper.length();
+            int shift = (isEncoding ? 1 : -1) * (key.charAt(j) - 'A');
+            result.append((char) ((c - 'A' + shift + 26) % 26 + 'A'));
+            j = (j + 1) % keyLength; // Cycle through the key
         }
-        return res;
+        return result.toString();
     }
 
-    // Method to decode the text using the Vigenère Cipher
-    static String decode(String text, final String key) {
-        String res = "";
-        text = text.toUpperCase();
-        String keyUpper = key.toUpperCase();
-
-        for (int i = 0, j = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c < 'A' || c > 'Z') {
-                res += c; // Preserve non-alphabet characters
-                continue;
-            }
-            res += (char) ((c - keyUpper.charAt(j) + 26) % 26 + 'A');
-            j = ++j % keyUpper.length();
-        }
-        return res;
-    }
-
-    public static void main(String[] args) throws java.lang.Exception {
+    public static void main(String[] args) {
         String key = "VIGENERECIPHER";
         String msg = "Security Laboratory";
 
@@ -44,12 +38,12 @@ public class VigenereCipher {
         System.out.println("Input Message : " + msg);
 
         // Remove spaces and encode the message
-        String msgNoSpaces = msg.replaceAll("\\s", "");
-        String enc = encode(msgNoSpaces, key);
-        System.out.println("Encrypted Message : " + enc);
+        String msgNoSpaces = msg.replaceAll("\\s", "").toUpperCase();
+        String encrypted = encode(msgNoSpaces, key);
+        System.out.println("Encrypted Message : " + encrypted);
 
         // Decode the encrypted message
-        String dec = decode(enc, key);
-        System.out.println("Decrypted Message : " + dec);
+        String decrypted = decode(encrypted, key);
+        System.out.println("Decrypted Message : " + decrypted);
     }
 }

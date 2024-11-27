@@ -1,68 +1,57 @@
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES {
     private static SecretKeySpec secretKey;
-    private static byte[] key;
 
-    // Method to set the encryption     
+    // Set the key for encryption and decryption
     public static void setKey(String myKey) {
-        MessageDigest sha = null;
         try {
-            key = myKey.getBytes("UTF-8");
-            sha = MessageDigest.getInstance("SHA-1");
+            byte[] key = myKey.getBytes("UTF-8");
+            MessageDigest sha = MessageDigest.getInstance("SHA-1");
             key = sha.digest(key);
-            key = Arrays.copyOf(key, 16); // Use only the first 128 bits (16 bytes)
-            secretKey = new SecretKeySpec(key, "AES");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            secretKey = new SecretKeySpec(key, 0, 16, "AES"); // Use first 128 bits
+        } catch (Exception e) {
+            throw new RuntimeException("Error setting up the key: " + e.getMessage());
         }
     }
 
-    // Encryption method
-    public static String encrypt(String strToEncrypt, String secret) {
+    // Encrypt a string
+    public static String encrypt(String data, String key) {
         try {
-            setKey(secret);
+            setKey(key);
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
+            return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes("UTF-8")));
         } catch (Exception e) {
-            System.out.println("Error while encrypting: " + e.toString());
+            throw new RuntimeException("Error encrypting: " + e.getMessage());
         }
-        return null;
     }
 
-    // Decryption method
-    public static String decrypt(String strToDecrypt, String secret) {
+    // Decrypt a string
+    public static String decrypt(String data, String key) {
         try {
-            setKey(secret);
+            setKey(key);
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
+            return new String(cipher.doFinal(Base64.getDecoder().decode(data)));
         } catch (Exception e) {
-            System.out.println("Error while decrypting: " + e.toString());
+            throw new RuntimeException("Error decrypting: " + e.getMessage());
         }
-        return null;
     }
 
     public static void main(String[] args) {
         final String secretKey = "annaUniversity";
+        String original = "www.annauniv.edu";
 
-        String originalString = "www.annauniv.edu";
-        String encryptedString = AES.encrypt(originalString, secretKey);
-        String decryptedString = AES.decrypt(encryptedString, secretKey);
+        String encrypted = encrypt(original, secretKey);
+        String decrypted = decrypt(encrypted, secretKey);
 
         System.out.println("URL Encryption Using AES Algorithm\n-------------");
-        System.out.println("Original URL: " + originalString);
-        System.out.println("Encrypted URL: " + encryptedString);
-        System.out.println("Decrypted URL: " + decryptedString);
+        System.out.println("Original URL: " + original);
+        System.out.println("Encrypted URL: " + encrypted);
+        System.out.println("Decrypted URL: " + decrypted);
     }
 }

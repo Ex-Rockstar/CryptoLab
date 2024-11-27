@@ -1,94 +1,95 @@
-
 import java.awt.Point;
 
-class PlayfairCipher {
-    private static char[][] charTable;
-    private static Point[] positions;
+public class PlayfairCipher {
+    private static char[][] cipherTable;
+    private static Point[] characterPositions;
 
-    // Prepares the text by removing unwanted characters and handling 'J'/'Q'
-    private static String prepareText(String s, boolean chgJtoI) {
-        s = s.toUpperCase().replaceAll("[^A-Z]", "");
-        return chgJtoI ? s.replace("J", "I") : s.replace("Q", "");
+    // Prepares the text by removing unwanted characters and merging 'J' into 'I'
+    private static String cleanText(String input) {
+        input = input.toUpperCase().replaceAll("[^A-Z]", ""); // Remove non-alphabetic characters
+        return input.replace("J", "I"); // Merge 'J' into 'I'
     }
 
     // Creates the Playfair cipher table
-    private static void createTbl(String key, boolean chgJtoI) {
-        charTable = new char[5][5];
-        positions = new Point[26];
-        String s = prepareText(key + "ABCDEFGHIJKLMNOPQRSTUVWXYZ", chgJtoI);
+    private static void generateCipherTable(String key) {
+        cipherTable = new char[5][5];
+        characterPositions = new Point[26];
+        String uniqueCharacters = cleanText(key + "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-        int len = s.length();
-        for (int i = 0, k = 0; i < len; i++) {
-            char c = s.charAt(i);
-            if (positions[c - 'A'] == null) { // Only insert unique characters
-                charTable[k / 5][k % 5] = c;
-                positions[c - 'A'] = new Point(k % 5, k / 5);
-                k++;
+        int uniqueIndex = 0;
+        for (int i = 0; i < uniqueCharacters.length(); i++) {
+            char currentChar = uniqueCharacters.charAt(i);
+            if (characterPositions[currentChar - 'A'] == null) { // Add unique characters only
+                cipherTable[uniqueIndex / 5][uniqueIndex % 5] = currentChar;
+                characterPositions[currentChar - 'A'] = new Point(uniqueIndex % 5, uniqueIndex / 5);
+                uniqueIndex++;
             }
         }
     }
 
-    // Encodes/decodes the text based on the direction (1 for encode, -1 for decode)
-    private static String codec(StringBuilder txt, int dir) {
-        int len = txt.length();
-        for (int i = 0; i < len; i += 2) {
-            char a = txt.charAt(i);
-            char b = txt.charAt(i + 1);
-            int row1 = positions[a - 'A'].y;
-            int row2 = positions[b - 'A'].y;
-            int col1 = positions[a - 'A'].x;
-            int col2 = positions[b - 'A'].x;
+    // Encodes or decodes the text based on the direction (1 for encode, -1 for decode)
+    private static String processText(StringBuilder text, int direction) {
+        for (int i = 0; i < text.length(); i += 2) {
+            char firstChar = text.charAt(i);
+            char secondChar = text.charAt(i + 1);
 
-            if (row1 == row2) { // Same row
-                col1 = (col1 + dir + 5) % 5;
-                col2 = (col2 + dir + 5) % 5;
-            } else if (col1 == col2) { // Same column
-                row1 = (row1 + dir + 5) % 5;
-                row2 = (row2 + dir + 5) % 5;
+            Point firstPos = characterPositions[firstChar - 'A'];
+            Point secondPos = characterPositions[secondChar - 'A'];
+
+            if (firstPos.y == secondPos.y) { // Same row
+                firstChar = cipherTable[firstPos.y][(firstPos.x + direction + 5) % 5];
+                secondChar = cipherTable[secondPos.y][(secondPos.x + direction + 5) % 5];
+            } else if (firstPos.x == secondPos.x) { // Same column
+                firstChar = cipherTable[(firstPos.y + direction + 5) % 5][firstPos.x];
+                secondChar = cipherTable[(secondPos.y + direction + 5) % 5][secondPos.x];
             } else { // Rectangle swap
-                int temp = col1;
-                col1 = col2;
-                col2 = temp;
+                firstChar = cipherTable[firstPos.y][secondPos.x];
+                secondChar = cipherTable[secondPos.y][firstPos.x];
             }
 
-            txt.setCharAt(i, charTable[row1][col1]);
-            txt.setCharAt(i + 1, charTable[row2][col2]);
+            text.setCharAt(i, firstChar);
+            text.setCharAt(i + 1, secondChar);
         }
-        return txt.toString();
+        return text.toString();
     }
 
-    // Encode the text
-    private static String encode(String s) {
-        StringBuilder sb = new StringBuilder(s);
-        for (int i = 0; i < sb.length(); i += 2) {
-            if (i == sb.length() - 1) { // Odd length, add padding
-                sb.append(sb.length() % 2 == 1 ? 'X' : "");
-            } else if (sb.charAt(i) == sb.charAt(i + 1)) { // Same character, add padding
-                sb.insert(i + 1, 'X');
+    // Encodes the input text
+    private static String encode(String input) {
+        StringBuilder text = new StringBuilder(input);
+        for (int i = 0; i < text.length(); i += 2) {
+            if (i == text.length() - 1) { // If odd length, add padding
+                text.append('X');
+            } else if (text.charAt(i) == text.charAt(i + 1)) { // If same characters, add padding
+                text.insert(i + 1, 'X');
             }
         }
-        return codec(sb, 1);
+        return processText(text, 1);
     }
 
-    // Decode the text
-    private static String decode(String s) {
-        return codec(new StringBuilder(s), -1);
+    // Decodes the input text
+    private static String decode(String input) {
+        return processText(new StringBuilder(input), -1);
     }
 
-    public static void main(String[] args) throws java.lang.Exception {
+    public static void main(String[] args) {
         String key = "CSE";
-        String txt = "SecurityLab";
-        boolean chgJtoI = true;
+        String plaintext = "SecurityLab";
 
-        createTbl(key, chgJtoI);
+        // Generate cipher table
+        generateCipherTable(key);
 
-        String preparedText = prepareText(txt, chgJtoI);
-        String enc = encode(preparedText);
+        // Prepare plaintext
+        String preparedText = cleanText(plaintext);
 
-        System.out.println("Simulating Playfair Cipher");
+        // Encrypt and decrypt
+        String encryptedText = encode(preparedText);
+        String decryptedText = decode(encryptedText);
+
+        // Display results
+        System.out.println("Playfair Cipher Simulation");
         System.out.println("--------------------------");
-        System.out.println("Input Message: " + txt);
-        System.out.println("Encrypted Message: " + enc);
-        System.out.println("Decrypted Message: " + decode(enc));
+        System.out.println("Input Message: " + plaintext);
+        System.out.println("Encrypted Message: " + encryptedText);
+        System.out.println("Decrypted Message: " + decryptedText);
     }
 }

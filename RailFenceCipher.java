@@ -2,51 +2,73 @@ public class RailFenceCipher {
     
     // Method to encode a message using Rail Fence Cipher
     public static String encode(String msg, int depth) {
-        char[] rail = new char[msg.length()];
+        char[][] rail = new char[depth][msg.length()];
+        StringBuilder enc = new StringBuilder();
+        
+        // Fill the rail in zigzag pattern
         int row = 0;
         boolean goingDown = false;
-
-        // Fill the message in zigzag pattern
+        
+        // Fill the rail with characters
         for (int i = 0; i < msg.length(); i++) {
-            rail[row] = msg.charAt(i);
-            if (row == 0 || row == depth - 1) goingDown = !goingDown;
-            row += goingDown ? 1 : -1;
+            rail[row][i] = msg.charAt(i);
+            if (row == 0 || row == depth - 1) {
+                goingDown = !goingDown; // Change direction
+            }
+            row += goingDown ? 1 : -1; // Move up or down
         }
-
-        // Read rail and build encoded message
-        StringBuilder enc = new StringBuilder();
-        for (char c : rail) enc.append(c);
+        
+        // Read the rail matrix to create the encoded message
+        for (int i = 0; i < depth; i++) {
+            for (int j = 0; j < msg.length(); j++) {
+                if (rail[i][j] != 0) {
+                    enc.append(rail[i][j]);
+                }
+            }
+        }
+        
         return enc.toString();
     }
 
     // Method to decode a message using Rail Fence Cipher
     public static String decode(String encMsg, int depth) {
-        char[] rail = new char[encMsg.length()];
+        char[][] rail = new char[depth][encMsg.length()];
+        StringBuilder dec = new StringBuilder();
+        
+        // Initialize the rail with '*' to mark the positions
         int row = 0;
         boolean goingDown = false;
-
-        // Mark the positions in zigzag pattern
+        
+        // Mark the positions of characters in the zigzag pattern
         for (int i = 0; i < encMsg.length(); i++) {
-            rail[row] = '*';
-            if (row == 0 || row == depth - 1) goingDown = !goingDown;
+            rail[row][i] = '*';
+            if (row == 0 || row == depth - 1) {
+                goingDown = !goingDown;
+            }
             row += goingDown ? 1 : -1;
         }
 
-        // Fill the rail with encrypted message
+        // Fill the rail with the encrypted message characters
         int k = 0;
-        for (int i = 0; i < encMsg.length(); i++) {
-            if (rail[i] == '*') rail[i] = encMsg.charAt(k++);
+        for (int i = 0; i < depth; i++) {
+            for (int j = 0; j < encMsg.length(); j++) {
+                if (rail[i][j] == '*' && k < encMsg.length()) {
+                    rail[i][j] = encMsg.charAt(k++);
+                }
+            }
         }
 
-        // Rebuild the decoded message from rail
-        StringBuilder dec = new StringBuilder();
+        // Read the rail matrix to create the decoded message
         row = 0;
         goingDown = false;
         for (int i = 0; i < encMsg.length(); i++) {
-            dec.append(rail[i]);
-            if (row == 0 || row == depth - 1) goingDown = !goingDown;
+            dec.append(rail[row][i]);
+            if (row == 0 || row == depth - 1) {
+                goingDown = !goingDown;
+            }
             row += goingDown ? 1 : -1;
         }
+        
         return dec.toString();
     }
 

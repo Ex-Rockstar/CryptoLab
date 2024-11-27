@@ -1,49 +1,53 @@
 import java.util.Scanner;
 
-class TransCipher {
+class TranspositionCipher {
     public static void main(String args[]) {
-        Scanner sc = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in);
 
-        // Input plaintext
+        // Input plaintext from the user
         System.out.println("Enter the plaintext:");
-        String pl = sc.nextLine();
-        sc.close();
+        String plaintext = scanner.nextLine();
+        scanner.close();
 
         // Remove spaces from the plaintext
-        String s = pl.replaceAll("\\s", "");
-        System.out.println("After removing spaces: " + s);
+        String cleanedText = plaintext.replaceAll("\\s", "");
+        System.out.println("After removing spaces: " + cleanedText);
 
-        // Determine matrix dimensions
-        int col = 4; // Fixed number of columns (can be adjusted)
-        int k = s.length();
-        int row = (int) Math.ceil((double) k / col); // Calculate rows dynamically
+        // Set the number of columns for the matrix (can be adjusted)
+        int numColumns = 4;
+        int textLength = cleanedText.length();
+        int numRows = (int) Math.ceil((double) textLength / numColumns); // Calculate number of rows
 
-        // Fill the matrix row-wise
-        char[][] ch = new char[row][col];
-        int l = 0; // Index for plaintext characters
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
-                if (l < k) {
-                    ch[i][j] = s.charAt(l++);
+        // Create a matrix to hold the characters in row-major order
+        char[][] matrix = new char[numRows][numColumns];
+        int currentIndex = 0; // Pointer to current character in the cleaned text
+
+        // Fill the matrix with characters from the cleaned text
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numColumns; col++) {
+                if (currentIndex < textLength) {
+                    matrix[row][col] = cleanedText.charAt(currentIndex++);
                 } else {
-                    ch[i][j] = '#'; // Padding character
+                    matrix[row][col] = '#'; // Padding character to fill the matrix
                 }
             }
         }
 
-        // Transpose the matrix (column-major order)
-        char[][] trans = new char[col][row];
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
-                trans[j][i] = ch[i][j];
+        // Create a new matrix to hold the transposed (encrypted) message
+        char[][] transposedMatrix = new char[numColumns][numRows];
+
+        // Transpose the original matrix to rearrange the characters column-wise
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numColumns; col++) {
+                transposedMatrix[col][row] = matrix[row][col];
             }
         }
 
         // Display the transposed (encrypted) message
         System.out.println("Encrypted message:");
-        for (int i = 0; i < col; i++) {
-            for (int j = 0; j < row; j++) {
-                System.out.print(trans[i][j]);
+        for (int col = 0; col < numColumns; col++) {
+            for (int row = 0; row < numRows; row++) {
+                System.out.print(transposedMatrix[col][row]);
             }
         }
         System.out.println();
